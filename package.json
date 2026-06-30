@@ -1,5 +1,5 @@
 {
-  "name": "simulator-risc-tmp",
+  "name": "simulator-risc",
   "version": "0.1.0",
   "private": true,
   "scripts": {
