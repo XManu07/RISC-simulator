@@ -23,8 +23,15 @@ export function stageOperandFetch(
     const hazard = detectHazard(instr, rf)
     if (hazard) return { a: 0, b: 0, stall: hazard }
   } else {
-    // Chiar cu forwarding, load-use hazard (LD în MEM → dependent în OF) nu poate fi rezolvat:
-    // datele LD nu sunt disponibile până la sfârșitul MEM.
+    // Chiar cu forwarding, load-use hazard nu poate fi rezolvat pentru LD în EX sau MEM.
+    const exSlot = slots[2]
+    if (exSlot?.instr?.opcode === 'LD') {
+      const ld = exSlot.instr
+      const needsLd = (ld.rd === instr.rs1 && instr.rs1 !== undefined)
+                   || (ld.rd === instr.rs2 && instr.rs2 !== undefined)
+                   || (instr.opcode === 'ST' && ld.rd === instr.rd)
+      if (needsLd) return { a: 0, b: 0, stall: `Load-use hazard: LD R${ld.rd} în EX` }
+    }
     const memSlot = slots[3]
     if (memSlot?.instr?.opcode === 'LD') {
       const ld = memSlot.instr

@@ -18,7 +18,9 @@ export class FlatMemory implements MemorySystem {
     this._lastAccess = { address, hit: true, cycles: 1 }
     this._isWrite = write
     this._writeValue = value
-    if (!write) {
+    if (write) {
+      this.data.set(address, value)
+    } else {
       this._result = this.data.get(address) ?? 0
     }
     this._ready = true  // latență 1 — gata imediat în același tact

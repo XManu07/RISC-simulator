@@ -10,7 +10,7 @@ export class Simulator {
 
   constructor(program: Map<number, number>, private config: SimConfig) {
     const iMem = new FlatMemory(program)
-    const dMem = new FlatMemory()
+    const dMem = new FlatMemory(new Map([[0x200, 0x00000001]]))
     const engine = new InOrderEngine()
     const rf = new ConcreteRegisterFile()
     this.pipeline = new Pipeline(rf, engine, iMem, dMem)

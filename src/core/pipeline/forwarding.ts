@@ -17,7 +17,8 @@ export function tryForward(
     const exSlot = slots[2]
     if (exSlot?.instr?.rd === reg
         && exSlot.instr.opcode !== 'ST'
-        && exSlot.instr.opcode !== 'NOP') {
+        && exSlot.instr.opcode !== 'NOP'
+        && exSlot.instr.opcode !== 'LD') {
       return exSlot.c
     }
 
