@@ -25,7 +25,7 @@ Acest om livrează întâi scaffold-ul (o singură dată, **frozen**), apoi îș
 Tot ce e mai jos îi aparține; restul echipei doar îl consumă prin interfețe.
 
 ### A. Scaffold înghețat (commit unic — după el, fișierele astea nu se mai ating de NIMENI)
-- [ ] **`core/contracts/`** — toate interfețele, înghețate (read-only pentru toți):
+- [x] **`core/contracts/`** — toate interfețele, înghețate (read-only pentru toți):
   - `instruction.ts` — `Instruction`, `InstructionClass` (ALU/LOAD/STORE/JMP), `Opcode`, formate R-R-R / R-R-I / R-M
   - `memory-system.ts` — interfața `MemorySystem` **cu stare, non-blocantă, multi-tact**. NU `access(addr) → rezultat` sincron (ăla întoarce pe loc și NU poate arăta latența cerută la nota 5). În schimb, cerere + polling:
     ```ts
@@ -41,7 +41,7 @@ Tot ce e mai jos îi aparține; restul echipei doar îl consumă prin interfețe
   - `register-file.ts` — interfața `RegisterFile` + biți de validare
   - `clock.ts` — tipuri pentru tact (latențele se numără în TACTE, nu ns)
   - `snapshot.ts` — **doar tipul compus** (vezi mai jos)
-- [ ] **Snapshot feliat** — tipul compus + 4 felii (fiecare felie e fișier propriu, în folderul subsistemului):
+- [x] **Snapshot feliat** — tipul compus + 4 felii (fiecare felie e fișier propriu, în folderul subsistemului):
   ```ts
   interface Snapshot {
     core: CoreSnapshot;            // P1 — pipeline/snapshot.ts
@@ -51,16 +51,16 @@ Tot ce e mai jos îi aparține; restul echipei doar îl consumă prin interfețe
   }
   ```
   Tipul compus nu se mai atinge. Fiecare om umple doar felia lui.
-- [ ] **Config feliat** — `Config { core; execution?; memory?; vm? }` + 4 sub-config, fiecare în folderul subsistemului.
-- [ ] **`simulator.ts`** — scris **o singură dată**: cheamă 4 factory-uri prin barrel-urile subsistemelor; **nu se mai editează niciodată**.
-- [ ] **Barrel per subsistem** — `execution/index.ts`, `memory/index.ts`, `virtual-memory/index.ts`; fiecare exportă un `createX(config, …)` care la început **întoarce mock-ul**. Omul respectiv îl înlocuiește cu implementarea lui (editează doar barrel-ul LUI).
-- [ ] **Mock-uri FUNCȚIONALE** (nu placeholder): `memory/flat-memory.ts` (FlatMemory) + `execution/in-order-engine.ts` (InOrderEngine). Baseline care chiar merge, ca toți să poată rula din prima.
-- [ ] **`store/simulator-store.ts`** — Zustand subțire (ține `Simulator`, expune `step()/reset()`, recalculează snapshot, array de snapshot-uri → undo/step-back). Scris o dată, nu se mai atinge.
-- [ ] **`app/page.tsx`** — grid cu 4 sloturi, importă 4 panouri **stub** (`<div>TODO</div>`). Fiecare om umple doar panoul lui; `page.tsx` nu se mai editează.
-- [ ] **`core/index.ts`** (barrel public) — exportă `Simulator` + tipuri; store-ul importă doar de aici. Nu se mai atinge.
+- [x] **Config feliat** — `Config { core; execution?; memory?; vm? }` + 4 sub-config, fiecare în folderul subsistemului.
+- [x] **`simulator.ts`** — scris **o singură dată**: cheamă 4 factory-uri prin barrel-urile subsistemelor; **nu se mai editează niciodată**.
+- [x] **Barrel per subsistem** (core/index.ts — P2/P3/P4 adaugă barrel-urile lor) — `execution/index.ts`, `memory/index.ts`, `virtual-memory/index.ts`; fiecare exportă un `createX(config, …)` care la început **întoarce mock-ul**. Omul respectiv îl înlocuiește cu implementarea lui (editează doar barrel-ul LUI).
+- [x] **Mock-uri FUNCȚIONALE** (nu placeholder): `memory/flat-memory.ts` (FlatMemory) + `execution/in-order-engine.ts` (InOrderEngine). Baseline care chiar merge, ca toți să poată rula din prima.
+- [x] **`store/simulator-store.ts`** — Zustand subțire (ține `Simulator`, expune `step()/reset()`, recalculează snapshot, array de snapshot-uri → undo/step-back). Scris o dată, nu se mai atinge.
+- [x] **`app/page.tsx`** — grid cu 4 sloturi, importă 4 panouri **stub** (`<div>TODO</div>`). Fiecare om umple doar panoul lui; `page.tsx` nu se mai editează.
+- [x] **`core/index.ts`** (barrel public) — exportă `Simulator` + tipuri; store-ul importă doar de aici. Nu se mai atinge.
 - [ ] **`components/shared/*`** — primitive UI reutilizabile: `Bus`, `RegisterCell`, `Bit`, `HexValue`. Set de start; dacă cuiva îi mai trebuie una, o face **local în panoul lui**, nu editează `shared/`.
 - [ ] **`lib/*`** — helperi generici (formatare hex etc.).
-- [ ] **Granițe mecanice**: alias-uri `tsconfig.json` (`@core/*`, `@store/*`, `@components/*`, `@lib/*`) + regula ESLint `no-restricted-imports` (core nu importă din components/app).
+- [x] **Granițe mecanice**: alias-uri `tsconfig.json` (`@core/*`, `@store/*`, `@components/*`, `@lib/*`) + regula ESLint `no-restricted-imports` (core nu importă din components/app).
 - [ ] **Tabela de opcode = append-only**: baseline-ul (ALU/LOAD/STORE/JMP) intră în scaffold; P2 adaugă restul fără să atingă rândurile existente.
 
 **„Gata cu scaffold-ul”:** `npm run dev` pornește, pagina arată 4 sloturi „TODO”, `Simulator`
@@ -71,21 +71,21 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 **Fișiere proprii (motor):** `core/isa/*`, `core/pipeline/*` (inclusiv felia `CoreSnapshot` din `pipeline/snapshot.ts`).
 **Fișiere proprii (UI):** `components/layout/Toolbar.tsx`, `components/editor/CodeEditor.tsx`, `components/pipeline/*`.
 
-- [ ] `isa/opcodes.ts` — tabela de opcode (append-only, baseline ALU/LOAD/STORE/JMP)
-- [ ] `isa/encode.ts` — `"ADD R9,R8,R7"` → cuvânt 32 biți
-- [ ] `isa/decode.ts` — cuvânt 32 biți → `Instruction`
-- [ ] `isa/assembler.ts` — parsează program + adrese asociate
-- [ ] `pipeline/register-file.ts` — `RegisterFile` concret + biți de validare
-- [ ] `pipeline/latch.ts` — MAR, MDR, IR, A, B, C + busuri adrese/date
-- [ ] `pipeline/stages/fetch.ts` — IF: `MAR←PC`; read prin iMem; `MDR←…`; `IR←MDR`; `PC←PC+4`
-- [ ] `pipeline/stages/operand-fetch.ts` — OF: decode + citire regiștri + check biți validare
-- [ ] `pipeline/stages/execute.ts` — EX: deleagă către `ExecutionEngine`
-- [ ] `pipeline/stages/memory.ts` — MEM: deleagă către `MemorySystem` (dMem)
-- [ ] `pipeline/stages/writeback.ts` — WB / SR (Memorare Rezultat)
-- [ ] `pipeline/hazards.ts` — detecție hazarduri prin biți de validare
-- [ ] `pipeline/forwarding.ts` — logica de forwarding
-- [ ] `pipeline/pipeline.ts` — orchestrează cele 5 stagii, deține latch-urile, produce `CoreSnapshot`
-- [ ] **UI:** `Toolbar`, `CodeEditor`, `PipelineView`, `RegisterFileView`, `LatchView`
+- [x] `isa/opcodes.ts` — tabela de opcode (append-only, baseline ALU/LOAD/STORE/JMP)
+- [x] `isa/encode.ts` — `"ADD R9,R8,R7"` → cuvânt 32 biți
+- [x] `isa/decode.ts` — cuvânt 32 biți → `Instruction`
+- [x] `isa/assembler.ts` — parsează program + adrese asociate
+- [x] `pipeline/register-file.ts` — `RegisterFile` concret + biți de validare
+- [x] `pipeline/latch.ts` — MAR, MDR, IR, A, B, C + busuri adrese/date
+- [x] `pipeline/stages/fetch.ts` — IF: `MAR←PC`; read prin iMem; `MDR←…`; `IR←MDR`; `PC←PC+4`
+- [x] `pipeline/stages/operand-fetch.ts` — OF: decode + citire regiștri + check biți validare
+- [x] `pipeline/stages/execute.ts` — EX: deleagă către `ExecutionEngine`
+- [x] `pipeline/stages/memory.ts` — MEM: deleagă către `MemorySystem` (dMem)
+- [x] `pipeline/stages/writeback.ts` — WB / SR (Memorare Rezultat)
+- [x] `pipeline/hazards.ts` — detecție hazarduri prin biți de validare
+- [x] `pipeline/forwarding.ts` — logica de forwarding
+- [x] `pipeline/pipeline.ts` — orchestrează cele 5 stagii, deține latch-urile, produce `Snapshot`
+- [x] **UI:** `Toolbar`, `CodeEditor`, `PipelineView`, `RegisterFileView`, `LatchView`
 
 **Criteriu „gata”:** exemplul de la nota 5 (`ADD R9,R8,R7` la 100h) rulează pas-cu-pas; se vede pe UI: MAR→bus adrese, MDR→bus date după N tacte, IR←MDR, WB scrie R9.
 

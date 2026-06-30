@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["src/core/**/*.ts"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: ["@components/*", "@/app/*", "../components/*", "../../components/*"],
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;
