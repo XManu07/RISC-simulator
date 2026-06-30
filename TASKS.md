@@ -27,7 +27,16 @@ Tot ce e mai jos îi aparține; restul echipei doar îl consumă prin interfețe
 ### A. Scaffold înghețat (commit unic — după el, fișierele astea nu se mai ating de NIMENI)
 - [ ] **`core/contracts/`** — toate interfețele, înghețate (read-only pentru toți):
   - `instruction.ts` — `Instruction`, `InstructionClass` (ALU/LOAD/STORE/JMP), `Opcode`, formate R-R-R / R-R-I / R-M
-  - `memory-system.ts` — interfața `MemorySystem` (read/write în tacte abstracte)
+  - `memory-system.ts` — interfața `MemorySystem` **cu stare, non-blocantă, multi-tact**. NU `access(addr) → rezultat` sincron (ăla întoarce pe loc și NU poate arăta latența cerută la nota 5). În schimb, cerere + polling:
+    ```ts
+    interface MemorySystem {
+      startAccess(addr: number, write?: boolean, value?: number): void; // tact 1: emite cererea (MAR pe bus)
+      isReady(): boolean;        // pipeline-ul întreabă la FIECARE tact; false cât timp accesul e în curs (stall)
+      result(): number;          // valabil doar când isReady() === true (atunci MDR se umple)
+      tick(): void;              // avansează un tact intern (consumă latența)
+    }
+    ```
+    **De ce e obligatoriu (nota 5):** „adresa se trece în registrul de adrese ȘI DUPĂ numărul de tacte corespunzător instrucțiunea apare în registrul de date" — MAR pe bus la tactul 1, aștepți N tacte, apoi MDR se umple. Un `access()` care returnează pe loc nu poate arăta asta pas-cu-pas. **Trebuie fixat ACUM, în Pasul 0, înainte de a îngheța interfața** — altfel îl prind toți abia la integrare.
   - `execution-engine.ts` — interfața `ExecutionEngine`
   - `register-file.ts` — interfața `RegisterFile` + biți de validare
   - `clock.ts` — tipuri pentru tact (latențele se numără în TACTE, nu ns)
@@ -110,14 +119,14 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 
 ### Obligatoriu
 - [ ] `memory/main-memory.ts` — memorie principală, latență fixă în tacte
-- [ ] `memory/cache/cache.ts` — **cache set-asociativ parametrizabil** (o clasă reutilizabilă), implementează `MemorySystem`, se instanțiază de 2 ori (I-cache pentru IF, D-cache pentru MEM)
+- [ ] `memory/cache/cache.ts` — **cache set-asociativ parametrizabil** (o clasă reutilizabilă), implementează `MemorySystem`, se instanțiază de 2 ori (I-cache pentru IF, D-cache pentru MEM). **Hit = puține tacte, miss = latența MP (mai multe tacte)** — diferența de tacte între hit și miss e exact ce face hit/miss vizibil; un cache cu latență 0 nu demonstrează nimic.
 - [ ] `memory/cache/cache-line.ts`, `memory/cache/cache-set.ts`
 - [ ] `memory/replacement/replacement-policy.ts` (interfața) + `memory/replacement/random.ts` (înlocuirea minimă obligatorie)
 - [ ] `memory/snapshot.ts` — `MemorySnapshot` (linii cache + **black box hit/miss**, obligatoriu)
 - [ ] Înlocuiește mock-ul în `memory/index.ts` (barrel-ul TĂU) cu factory-ul real de cache
 - [ ] **UI:** `CacheView` (hit/miss vizibil), `MemoryView`
 
-**Criteriu „gata”:** I-cache și D-cache separate; o secvență LD repetată arată miss apoi hit pe UI.
+**Criteriu „gata”:** I-cache și D-cache separate; o secvență LD repetată arată miss (mai multe tacte) apoi hit (mai puține tacte) pe UI — diferența de tacte trebuie să fie vizibilă pas-cu-pas.
 
 ---
 
