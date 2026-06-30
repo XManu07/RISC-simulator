@@ -3,10 +3,9 @@ import { useState } from 'react'
 import { useSimulatorStore } from '@store/simulator-store'
 
 const DEFAULT_PROGRAM = `; Demo nota 5 — o instructiune din fiecare clasa
-100h  ADD R9,R8,R7
-104h  LD  R1,200h
-108h  ST  R2,204h
-10Ch  JMP 100h`
+100h  ST R2,100h
+104h  LD R1,140h
+108h  LD R3,180h`
 
 export function CodeEditor() {
   const [source, setSource] = useState(DEFAULT_PROGRAM)

@@ -118,13 +118,13 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 **Fișiere proprii (UI):** `components/memory/*`.
 
 ### Obligatoriu
-- [ ] `memory/main-memory.ts` — memorie principală, latență fixă în tacte
-- [ ] `memory/cache/cache.ts` — **cache set-asociativ parametrizabil** (o clasă reutilizabilă), implementează `MemorySystem`, se instanțiază de 2 ori (I-cache pentru IF, D-cache pentru MEM). **Hit = puține tacte, miss = latența MP (mai multe tacte)** — diferența de tacte între hit și miss e exact ce face hit/miss vizibil; un cache cu latență 0 nu demonstrează nimic.
-- [ ] `memory/cache/cache-line.ts`, `memory/cache/cache-set.ts`
-- [ ] `memory/replacement/replacement-policy.ts` (interfața) + `memory/replacement/random.ts` (înlocuirea minimă obligatorie)
-- [ ] `memory/snapshot.ts` — `MemorySnapshot` (linii cache + **black box hit/miss**, obligatoriu)
-- [ ] Înlocuiește mock-ul în `memory/index.ts` (barrel-ul TĂU) cu factory-ul real de cache
-- [ ] **UI:** `CacheView` (hit/miss vizibil), `MemoryView`
+- [x] `memory/main-memory.ts` — memorie principală, latență fixă în tacte
+- [x] `memory/cache/cache.ts` — **cache set-asociativ parametrizabil** (o clasă reutilizabilă), implementează `MemorySystem`, se instanțiază de 2 ori (I-cache pentru IF, D-cache pentru MEM). **Hit = puține tacte, miss = latența MP (mai multe tacte)** — diferența de tacte între hit și miss e exact ce face hit/miss vizibil; un cache cu latență 0 nu demonstrează nimic.
+- [x] `memory/cache/cache-line.ts`, `memory/cache/cache-set.ts`
+- [x] `memory/replacement/replacement-policy.ts` (interfața) + `memory/replacement/random.ts` (înlocuirea minimă obligatorie)
+- [x] `memory/snapshot.ts` — `MemorySnapshot` (linii cache + **black box hit/miss**, obligatoriu)
+- [x] Înlocuiește mock-ul în `memory/index.ts` (barrel-ul TĂU) cu factory-ul real de cache *(notă: scaffold-ul n-a folosit barrel `memory/index.ts` — cache-ul e cablat direct în `simulator.ts` când `config.cache` e activ; felia `memory` din snapshot se atașează în `Simulator.step()`)*
+- [x] **UI:** `CacheView` (hit/miss vizibil), `MemoryView`
 
 **Criteriu „gata”:** I-cache și D-cache separate; o secvență LD repetată arată miss (mai multe tacte) apoi hit (mai puține tacte) pe UI — diferența de tacte trebuie să fie vizibilă pas-cu-pas.
 
@@ -175,5 +175,5 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 
 ## Dacă rămâne timp (extensii opționale, abia după ce merge demo-ul end-to-end)
 - **P2:** tabelă de marcaj (scoreboard), Tomasulo + stații de rezervare, common data bus, buffer de prefetch, execuție out-of-order.
-- **P3:** write-through / write-back / write-buffer; LRU (contor/stivă/matrice — unul) + LRU aproximativ.
+- **P3:** write-through / write-back / write-buffer; LRU (contor/stivă/matrice — unul) + LRU aproximativ. *(făcut: write-back + LRU cu contor, selectabile din UI; rămase: write-buffer, LRU aproximativ)*
 - **P4:** rafinări pe vizualizarea celor 6 cazuri.

@@ -2,7 +2,8 @@
 import { useSimulatorStore } from '@store/simulator-store'
 
 export function Toolbar() {
-  const { snapshot, step, stepBack, reset, startPC, setStartPC, history } = useSimulatorStore()
+  const { snapshot, step, stepBack, reset, startPC, setStartPC, history, config, setConfig } =
+    useSimulatorStore()
 
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-zinc-800 text-white text-sm font-mono border-b border-zinc-700">
@@ -42,6 +43,19 @@ export function Toolbar() {
       >
         ↺ Reset
       </button>
+
+      {/* P3 — pornește/oprește cache-ul. Are efect după următorul „Load Program". */}
+      <label
+        className="flex items-center gap-1 ml-2 text-zinc-300 cursor-pointer"
+        title="Reîncarcă programul după ce schimbi"
+      >
+        <input
+          type="checkbox"
+          checked={config.cache}
+          onChange={e => setConfig({ cache: e.target.checked })}
+        />
+        Cache
+      </label>
 
       {snapshot && (
         <span className="ml-auto text-zinc-400">

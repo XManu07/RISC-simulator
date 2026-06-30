@@ -4,6 +4,8 @@ import { CodeEditor } from '@components/editor/CodeEditor'
 import { PipelineView } from '@components/pipeline/PipelineView'
 import { RegisterFileView } from '@components/pipeline/RegisterFileView'
 import { LatchView } from '@components/pipeline/LatchView'
+import { CacheView } from '@components/memory/CacheView'
+import { MemoryView } from '@components/memory/MemoryView'
 
 export default function SimulatorPage() {
   return (
@@ -29,9 +31,8 @@ export default function SimulatorPage() {
           <div className="p-2 border-t border-zinc-800 text-zinc-700 text-[10px] font-mono italic">
             [P2] ScoreboardView — TODO
           </div>
-          <div className="p-2 border-t border-zinc-800 text-zinc-700 text-[10px] font-mono italic">
-            [P3] CacheView — TODO
-          </div>
+          <CacheView />
+          <MemoryView />
           <div className="p-2 border-t border-zinc-800 text-zinc-700 text-[10px] font-mono italic">
             [P4] TlbView — TODO
           </div>
