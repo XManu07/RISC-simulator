@@ -1,4 +1,6 @@
 export type Opcode = 'ADD' | 'SUB' | 'MUL' | 'LD' | 'ST' | 'JMP' | 'NOP'
+                   | 'DIV' | 'AND' | 'OR' | 'XOR' | 'SHL' | 'SHR' | 'LDI'
+                   | 'JZ' | 'JNZ'
 
 export type InstructionClass = 'ALU' | 'LOAD' | 'STORE' | 'JMP'
 
@@ -22,4 +24,14 @@ export const INSTRUCTION_CLASS: Record<Opcode, InstructionClass> = {
   ST:  'STORE',
   JMP: 'JMP',
   NOP: 'ALU',
+  // P2 additions
+  DIV: 'ALU',
+  AND: 'ALU',
+  OR:  'ALU',
+  XOR: 'ALU',
+  SHL: 'ALU',
+  SHR: 'ALU',
+  LDI: 'ALU',
+  JZ:  'JMP',
+  JNZ: 'JMP',
 }

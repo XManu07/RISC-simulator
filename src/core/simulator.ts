@@ -9,11 +9,16 @@ import { buildMemorySnapshot } from './memory/snapshot'
 import { InOrderEngine } from './execution/in-order-engine'
 import { ConcreteRegisterFile } from './pipeline/register-file'
 import { Pipeline } from './pipeline/pipeline'
+import { TomasuloCore } from './execution/superscalar/tomasulo-core'
+import { ScoreboardCore } from './execution/superscalar/scoreboard-core'
+import { defaultExecutionConfig } from './execution/execution-config'
 
 export class Simulator {
   private pipeline: Pipeline
   private iCache: Cache | null = null
   private dCache: Cache | null = null
+  private core: TomasuloCore | null = null
+  private scoreCore: ScoreboardCore | null = null
 
   constructor(program: Map<number, number>, private config: SimConfig) {
     let iMem: MemorySystem
@@ -30,17 +35,37 @@ export class Simulator {
       dMem = new FlatMemory()
     }
 
-
     const engine = new InOrderEngine()
     const rf = new ConcreteRegisterFile()
     this.pipeline = new Pipeline(rf, engine, iMem, dMem)
+
+    if (config.superscalar) {
+      const execCfg = config.execution ?? defaultExecutionConfig
+      if (execCfg.schedulingMode === 'scoreboard') {
+        this.scoreCore = new ScoreboardCore(rf, iMem, dMem, execCfg)
+      } else {
+        this.core = new TomasuloCore(rf, iMem, dMem, execCfg)
+      }
+    }
   }
 
   setPC(pc: number): void {
+    if (this.scoreCore) { this.scoreCore.setPC(pc); return }
+    if (this.core) { this.core.setPC(pc); return }
     this.pipeline.setPC(pc)
   }
 
   step(): Snapshot {
+    if (this.scoreCore) {
+      const snap = this.scoreCore.step()
+      snap.execution = this.scoreCore.getExecutionSnapshot()
+      return snap
+    }
+    if (this.core) {
+      const snap = this.core.step()
+      snap.execution = this.core.getExecutionSnapshot()
+      return snap
+    }
     const snap = this.pipeline.tick_()
     // P3 — atașează felia `memory` (starea cache-urilor) când cache-ul e activ
     if (this.iCache || this.dCache) {
@@ -50,6 +75,8 @@ export class Simulator {
   }
 
   reset(): void {
+    if (this.scoreCore) { this.scoreCore.reset(); return }
+    if (this.core) { this.core.reset(); return }
     this.pipeline.reset()
   }
 }

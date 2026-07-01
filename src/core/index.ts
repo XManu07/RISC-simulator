@@ -5,3 +5,6 @@ export type { Snapshot, PipelineLatch, RegisterSnapshot } from './contracts/snap
 export type { Instruction, Opcode, InstructionClass } from './contracts/instruction'
 export type { MemoryAccessResult } from './contracts/memory-system'
 export { assemble } from './isa/assembler'
+export type { ExecutionConfig } from './execution/execution-config'
+export { defaultExecutionConfig } from './execution/execution-config'
+export type { ExecutionSnapshot, FUStatusSnapshot } from './execution/snapshot'
