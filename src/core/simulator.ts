@@ -9,11 +9,13 @@ import { buildMemorySnapshot } from './memory/snapshot'
 import { InOrderEngine } from './execution/in-order-engine'
 import { ConcreteRegisterFile } from './pipeline/register-file'
 import { Pipeline } from './pipeline/pipeline'
+import { MMU } from './virtual-memory/mmu'
 
 export class Simulator {
   private pipeline: Pipeline
   private iCache: Cache | null = null
   private dCache: Cache | null = null
+  private dMmu: MMU | null = null
 
   constructor(program: Map<number, number>, private config: SimConfig) {
     let iMem: MemorySystem
@@ -30,6 +32,12 @@ export class Simulator {
       dMem = new FlatMemory()
     }
 
+    if (config.virtualMemory) {
+      const iMmu = new MMU(iMem, config.vmConfig)
+      this.dMmu = new MMU(dMem, config.vmConfig)
+      iMem = iMmu
+      dMem = this.dMmu
+    }
 
     const engine = new InOrderEngine()
     const rf = new ConcreteRegisterFile()
@@ -42,10 +50,10 @@ export class Simulator {
 
   step(): Snapshot {
     const snap = this.pipeline.tick_()
-    // P3 — atașează felia `memory` (starea cache-urilor) când cache-ul e activ
     if (this.iCache || this.dCache) {
       snap.memory = buildMemorySnapshot(this.iCache, this.dCache)
     }
+    if (this.dMmu) snap.vm = this.dMmu.vmSnapshot()
     return snap
   }
 
