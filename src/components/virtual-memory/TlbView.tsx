@@ -2,6 +2,7 @@
 import { useSimulatorStore } from '@store/simulator-store'
 import type { VmSnapshot } from '@core/virtual-memory/snapshot'
 import { CASE_LABEL, CASE_COLOR } from '@core/virtual-memory/snapshot'
+import { defaultVmConfig } from '@core/config'
 
 function hex(n: number, width = 5) {
   return '0x' + n.toString(16).toUpperCase().padStart(width, '0')
@@ -88,7 +89,7 @@ function CaseMatrix({ active }: { active: number | null }) {
 }
 
 export function TlbView() {
-  const { snapshot, config, setConfig } = useSimulatorStore()
+  const { snapshot, config, setConfig, reload } = useSimulatorStore()
   const vm = snapshot?.vm as VmSnapshot | undefined
 
   return (
@@ -122,9 +123,10 @@ export function TlbView() {
             <input
               type="checkbox"
               checked={!!config.vmConfig?.pageTableInCache}
-              onChange={e =>
-                setConfig({ vmConfig: { ...(config.vmConfig ?? {}), pageTableInCache: e.target.checked } as typeof config.vmConfig & object })
-              }
+              onChange={e => {
+                setConfig({ vmConfig: { ...defaultVmConfig, ...config.vmConfig, pageTableInCache: e.target.checked } })
+                reload()
+              }}
               className="accent-yellow-400"
             />
             <span className="text-zinc-400">Tabelă pagini în cache (cazuri 3/4)</span>

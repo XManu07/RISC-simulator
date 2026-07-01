@@ -15,6 +15,7 @@ interface SimulatorStore {
   step(): void
   stepBack(): void
   reset(): void
+  reload(): void
   setStartPC(pc: number): void
   setConfig(partial: Partial<SimConfig>): void
 }
@@ -66,6 +67,14 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
     simulator?.reset()
     simulator?.setPC(startPC)
     set({ snapshot: null, history: [] })
+  },
+
+  reload() {
+    const { loadedProgram, config, startPC } = get()
+    if (!loadedProgram) return
+    const sim = new Simulator(loadedProgram, config)
+    sim.setPC(startPC)
+    set({ simulator: sim, snapshot: null, history: [] })
   },
 
   setStartPC(pc: number) {
