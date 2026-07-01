@@ -57,6 +57,22 @@ export function Toolbar() {
         Cache
       </label>
 
+      {/* P2 — pornește/oprește motorul superscalar (Tomasulo/Scoreboard) în locul pipeline-ului P1.
+          Trăiește aici (nu doar în ExecutionView) fiindcă centrul afişează ExecutionView SAU
+          PipelineView în funcţie de acest flag — fără acest toggle, nu ar exista nicio cale să-l
+          activezi din starea iniţială (PipelineView nu are acces la el). */}
+      <label
+        className="flex items-center gap-1 ml-2 text-zinc-300 cursor-pointer"
+        title="Reîncarcă programul după ce schimbi"
+      >
+        <input
+          type="checkbox"
+          checked={config.superscalar}
+          onChange={e => setConfig({ superscalar: e.target.checked })}
+        />
+        Superscalar
+      </label>
+
       {snapshot && (
         <span className="ml-auto text-zinc-400">
           Tact: <span className="text-white font-bold">{snapshot.tick}</span>
