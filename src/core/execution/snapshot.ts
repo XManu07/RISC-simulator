@@ -1,5 +1,8 @@
+export type UnitClass = 'ALU' | 'MUL' | 'LDST' | 'JMP'
+
 export interface RSEntrySnapshot {
   id: number
+  unitClass: UnitClass
   busy: boolean
   op: string
   Vj: number
@@ -21,10 +24,17 @@ export interface ROBEntrySnapshot {
   index: number
   busy: boolean
   opcode: string
+  pc: number
   destReg: number | null
   value: number
   ready: boolean
   state: string
+  predictedTaken: boolean | null
+  branchTaken: boolean | null
+  branchTarget: number | null
+  isStore: boolean
+  storeAddr: number | null
+  storeValue: number | null
 }
 
 export interface CDBSnapshot {
@@ -35,6 +45,7 @@ export interface CDBSnapshot {
 export interface PrefetchEntrySnapshot {
   pc: number
   opcode: string
+  predictedTaken: boolean
 }
 
 import type { PredictorSnapshot } from './superscalar/branch-predictor'
@@ -63,12 +74,18 @@ export interface ExecutionSnapshot {
   units: UnitSnapshot[]
   registerStatus: Array<{ reg: number; robTag: number | null }>
   rob: { head: number; tail: number; entries: ROBEntrySnapshot[] }
-  cdb: CDBSnapshot | null
+  cdb: CDBSnapshot[]
   prefetchBuffer: PrefetchEntrySnapshot[]
   predictor: PredictorSnapshot | null
   flushedThisTick: boolean
   instrStatus: RSEntrySnapshot[]
   fuStatus?: FUStatusSnapshot[]
+  // Semnale de stall/în-zbor — vizibile indiferent de mod (P2)
+  fetchPC: number                            // adresa curentă de prefetch (poate diverge de PC la speculație)
+  branchInFlight: boolean                    // issue e blocat de un branch nerezolvat
+  fetchPending: boolean                      // fetch așteaptă un acces iMem/I-cache în curs
+  pendingLoad: { robTag: number } | null      // un LD are acces dMem în zbor (unitatea LD/ST poate fi deja liberă)
+  pendingStore: boolean                      // un ST la commit are scrierea dMem în zbor
 }
 
 export function buildExecutionSnapshot(tick: number): ExecutionSnapshot {
@@ -79,10 +96,15 @@ export function buildExecutionSnapshot(tick: number): ExecutionSnapshot {
     units: [],
     registerStatus: [],
     rob: { head: 0, tail: 0, entries: [] },
-    cdb: null,
+    cdb: [],
     prefetchBuffer: [],
     predictor: null,
     flushedThisTick: false,
     instrStatus: [],
+    fetchPC: 0,
+    branchInFlight: false,
+    fetchPending: false,
+    pendingLoad: null,
+    pendingStore: false,
   }
 }

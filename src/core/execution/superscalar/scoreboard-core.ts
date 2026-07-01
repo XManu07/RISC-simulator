@@ -110,8 +110,12 @@ export class ScoreboardCore {
     }))
 
     const prefetchEntries = this.prefetch.snapshot().map(e => ({
-      pc: e.pc, opcode: e.instr.opcode as string,
+      pc: e.pc, opcode: e.instr.opcode as string, predictedTaken: e.predictedTaken,
     }))
+
+    const pendingLoad = this.memState_ !== null && this.memState_.entry.op === 'LD'
+      ? { robTag: 0 } : null
+    const pendingStore = this.memState_ !== null && this.memState_.entry.op === 'ST'
 
     return {
       mode: 'scoreboard',
@@ -122,10 +126,15 @@ export class ScoreboardCore {
       fuStatus,
       registerStatus: regStatus,
       rob: { head: 0, tail: 0, entries: [] },
-      cdb: null,
+      cdb: [],
       prefetchBuffer: prefetchEntries,
       predictor: null,
       flushedThisTick: false,
+      fetchPC: this.fetchPC_,
+      branchInFlight: this.branchInFlight_,
+      fetchPending: this.fetchPending_,
+      pendingLoad,
+      pendingStore,
     }
   }
 

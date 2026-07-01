@@ -106,9 +106,9 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 - [x] **Superscalaritate la nivel de unități** — engine care ține N instanțe per clasă (ex. 2 sumatoare); implementează `ExecutionEngine` *(`ExecutionConfig.units` — default 2 ALU / 1 MUL / 1 LD-ST / 1 JMP)*
 - [x] `execution/snapshot.ts` — `ExecutionSnapshot` (stare unități/instrucțiuni)
 - [x] Înlocuiește mock-ul în `execution/index.ts` (barrel-ul TĂU) cu engine-ul real *(notă: la fel ca P3, nu s-a folosit barrel `execution/index.ts` — `TomasuloCore`/`ScoreboardCore` sunt instanțiate direct în `simulator.ts` după `config.superscalar` + `config.execution.schedulingMode`; felia `execution` din snapshot vine din `engine.getExecutionSnapshot()`)*
-- [ ] **UI:** `ScoreboardView` / panou cu starea unităților funcționale *(rămas TODO — `app/page.tsx` are încă stub-ul `[P2] ScoreboardView — TODO`, nu există `components/execution/*`)*
+- [x] **UI:** `ScoreboardView` / panou cu starea unităților funcționale *(`components/execution/*`: `ExecutionView` — toggle + config completă + dashboard; `FunctionalUnitsPanel`, `ReservationStationsPanel`, `RobPanel`, `CdbPanel`, `BranchPredictorPanel`, `PrefetchBufferPanel`, `RegisterStatusPanel`, `StallStatusPanel`. `app/page.tsx` comută centrul între `PipelineView`/`ExecutionView` după `config.superscalar`; toggle-ul e în Toolbar (P1's panel e altfel inaccesibil de acolo). Verificat cu Playwright: ambele moduri (Tomasulo/Scoreboard), plus superscalar+cache+VM simultan.)*
 
-**Criteriu „gata”:** un program cu 2 ALU + 1 MUL emite în paralel pe unități separate; UI arată care unitate e busy. *(motorul e gata; partea de UI nu.)*
+**Criteriu „gata”:** un program cu 2 ALU + 1 MUL emite în paralel pe unități separate; UI arată care unitate e busy. *(gata — motor + UI.)*
 
 ---
 
@@ -174,6 +174,6 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 ---
 
 ## Dacă rămâne timp (extensii opționale, abia după ce merge demo-ul end-to-end)
-- **P2:** tabelă de marcaj (scoreboard), Tomasulo + stații de rezervare, common data bus, buffer de prefetch, execuție out-of-order. *(toate făcute: `ScoreboardCore` (CDC-6600, stall WAR/WAW) + `TomasuloCore` (RS pools în `rs-pool.ts`, renaming, CDB, ROB circular în `reorder-buffer.ts`, execuție speculativă cu branch predictor + prefetch buffer + squash-on-mispredict); rămâne doar UI-ul (`ScoreboardView`))*
+- **P2:** tabelă de marcaj (scoreboard), Tomasulo + stații de rezervare, common data bus, buffer de prefetch, execuție out-of-order. *(toate făcute, motor + UI: `ScoreboardCore` (CDC-6600, stall WAR/WAW) + `TomasuloCore` (RS pools în `rs-pool.ts`, renaming, CDB, ROB circular în `reorder-buffer.ts`, execuție speculativă cu branch predictor + prefetch buffer + squash-on-mispredict); `components/execution/*` complet)*
 - **P3:** write-through / write-back / write-buffer; LRU (contor/stivă/matrice — unul) + LRU aproximativ. *(făcut: write-back + LRU cu contor, selectabile din UI; rămase: write-buffer, LRU aproximativ)*
 - **P4:** rafinări pe vizualizarea celor 6 cazuri.

@@ -62,8 +62,9 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   },
 
   reset() {
-    const { simulator } = get()
+    const { simulator, startPC } = get()
     simulator?.reset()
+    simulator?.setPC(startPC)
     set({ snapshot: null, history: [] })
   },
 

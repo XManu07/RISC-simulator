@@ -4,7 +4,7 @@ import type { RegisterFile } from '@core/contracts/register-file'
 import type { Instruction, Opcode } from '@core/contracts/instruction'
 import { decode } from '@core/isa/decode'
 import type { ExecutionConfig } from '../execution-config'
-import type { ExecutionSnapshot, CDBSnapshot } from '../snapshot'
+import type { ExecutionSnapshot, CDBSnapshot, UnitClass } from '../snapshot'
 import { RSPool } from './rs-pool'
 import { RegisterStatus } from './register-status'
 import { ReorderBuffer } from './reorder-buffer'
@@ -26,7 +26,7 @@ export class TomasuloCore {
   private fetchPC_ = 0
   private branchInFlight_ = false
   private flushedThisTick_ = false
-  private lastCDB_: CDBSnapshot | null = null
+  private lastCDB_: CDBSnapshot[] = []
   private fetchPending_ = false                       // true while an iMem access is in-flight
   private ldState_: { robTag: number } | null = null  // pending LD dMem data access (cache miss)
   private stPending_ = false                          // true while a committing ST write is in-flight
@@ -72,7 +72,7 @@ export class TomasuloCore {
   step(): Snapshot {
     this.tick_++
     this.flushedThisTick_ = false
-    this.lastCDB_ = null
+    this.lastCDB_ = []
 
     this.doLDMemory()   // advance pending LD dMem access first so result is visible to doCommit
     this.doCommit()
@@ -86,16 +86,15 @@ export class TomasuloCore {
   }
 
   getExecutionSnapshot(): ExecutionSnapshot {
-    const allRS = [
-      ...this.aluRS.entries,
-      ...this.mulRS.entries,
-      ...this.ldstRS.entries,
-      ...this.jmpRS.entries,
+    const poolsByClass: Array<[UnitClass, RSPool]> = [
+      ['ALU', this.aluRS], ['MUL', this.mulRS], ['LDST', this.ldstRS], ['JMP', this.jmpRS],
     ]
-    const rss = allRS.map(e => ({
-      id: e.id, busy: e.busy, op: e.op,
-      Vj: e.Vj, Qj: e.Qj, Vk: e.Vk, Qk: e.Qk, destRob: e.destRob,
-    }))
+    const rss = poolsByClass.flatMap(([unitClass, pool]) =>
+      pool.entries.map(e => ({
+        id: e.id, unitClass, busy: e.busy, op: e.op,
+        Vj: e.Vj, Qj: e.Qj, Vk: e.Vk, Qk: e.Qk, destRob: e.destRob,
+      }))
+    )
 
     const allUnits: Array<[string, FunctionalUnit[]]> = [
       ['ALU', this.aluUnits], ['MUL', this.mulUnits],
@@ -115,12 +114,18 @@ export class TomasuloCore {
 
     const robSnap = this.rob.snapshot()
     const robEntries = robSnap.entries.map(e => ({
-      index: e.index, busy: e.busy, opcode: e.opcode as string,
+      index: e.index, busy: e.busy, opcode: e.opcode as string, pc: e.pc,
       destReg: e.destReg, value: e.value, ready: e.ready, state: e.state as string,
+      predictedTaken: JMP_OPS.has(e.opcode) ? e.predictedTaken : null,
+      branchTaken: JMP_OPS.has(e.opcode) && e.ready ? e.branchTaken : null,
+      branchTarget: JMP_OPS.has(e.opcode) ? e.branchTarget : null,
+      isStore: e.isStore,
+      storeAddr: e.isStore ? e.storeAddr : null,
+      storeValue: e.isStore ? e.storeValue : null,
     }))
 
     const prefetchEntries = this.prefetch.snapshot().map(e => ({
-      pc: e.pc, opcode: e.instr.opcode as string,
+      pc: e.pc, opcode: e.instr.opcode as string, predictedTaken: e.predictedTaken,
     }))
 
     return {
@@ -135,12 +140,17 @@ export class TomasuloCore {
       prefetchBuffer: prefetchEntries,
       predictor: this.predictor.snapshot(),
       flushedThisTick: this.flushedThisTick_,
+      fetchPC: this.fetchPC_,
+      branchInFlight: this.branchInFlight_,
+      fetchPending: this.fetchPending_,
+      pendingLoad: this.ldState_,
+      pendingStore: this.stPending_,
     }
   }
 
   reset(): void {
     this.tick_ = 0; this.pc_ = 0; this.fetchPC_ = 0
-    this.branchInFlight_ = false; this.flushedThisTick_ = false; this.lastCDB_ = null
+    this.branchInFlight_ = false; this.flushedThisTick_ = false; this.lastCDB_ = []
     this.fetchPending_ = false; this.ldState_ = null; this.stPending_ = false
     this.rob.reset(); this.regStatus.reset(); this.prefetch.flush()
     this.predictor.reset()
@@ -229,7 +239,7 @@ export class TomasuloCore {
     this.mulRS.snoopCDB(robTag, value)
     this.ldstRS.snoopCDB(robTag, value)
     this.jmpRS.snoopCDB(robTag, value)
-    this.lastCDB_ = { robTag, value }
+    this.lastCDB_.push({ robTag, value })
   }
 
   private doTickUnits(): void {
@@ -301,14 +311,14 @@ export class TomasuloCore {
       this.mulRS.snoopCDB(robTag, value)
       this.ldstRS.snoopCDB(robTag, value)
       this.jmpRS.snoopCDB(robTag, value)
-      this.lastCDB_ = { robTag, value }
+      this.lastCDB_.push({ robTag, value })
     }
   }
 
   private doDispatch(): void {
     this.dispatchPool(this.aluRS, this.aluUnits)
     this.dispatchPool(this.mulRS, this.mulUnits)
-    this.dispatchPool(this.ldstRS, this.ldstUnits)
+    this.dispatchLdSt()
     this.dispatchPool(this.jmpRS, this.jmpUnits)
   }
 
@@ -320,6 +330,37 @@ export class TomasuloCore {
       pool.free(rs.id)
       this.rob.get(rs.destRob).state = 'execute'
     }
+  }
+
+  // LD/ST gets its own dispatch loop: a load's actual memory read happens as soon as
+  // its unit finishes (out of order), but a store's actual memory write only happens
+  // later at commit (in order). Without a check here, a load could read memory before
+  // an older, not-yet-ready store to the same address ever writes it. There's no address
+  // disambiguation in this model, so the conservative fix is: a load may not dispatch
+  // while ANY older store is still in-flight (busy) in the ROB, regardless of address.
+  private dispatchLdSt(): void {
+    for (const rs of this.ldstRS.getReady()) {
+      if (rs.op === 'LD' && this.hasOlderPendingStore(rs.destRob)) continue
+      const unit = this.ldstUnits.find(u => !u.busy)
+      if (!unit) break
+      unit.start(rs.op, rs.Vj, rs.Vk, rs.destRob)
+      this.ldstRS.free(rs.id)
+      this.rob.get(rs.destRob).state = 'execute'
+    }
+  }
+
+  // True if some ROB entry strictly older than `targetIndex` (walking circularly back
+  // to the ROB head) is still busy and is a store — i.e. issued earlier in program order
+  // and not yet committed (committed entries have busy=false).
+  private hasOlderPendingStore(targetIndex: number): boolean {
+    const size = this.config.robSize
+    let i = this.rob.head
+    while (i !== targetIndex) {
+      const e = this.rob.get(i)
+      if (e.busy && e.isStore) return true
+      i = (i + 1) % size
+    }
+    return false
   }
 
   private doIssue(): void {
