@@ -36,10 +36,13 @@ There is **no test runner wired up yet** (`ARCHITECTURE.md` describes a `tests/`
 ### Current state vs. the doc
 
 The implementation is ahead of / diverges from parts of `ARCHITECTURE.md` and `TASKS.md` — trust the code:
-- Only `InOrderEngine` exists; there is no `execution/superscalar` or `execution/units` yet (P2 not started).
 - `virtual-memory/` (P4) is not implemented; `config.virtualMemory` is unused in `simulator.ts`.
 - Cache (P3) is wired **directly in `simulator.ts`** guarded by `config.cache`, not through a `memory/index.ts` barrel/factory. The `memory` snapshot slice is attached in `Simulator.step()`.
 - Implemented memory extensions: set-associative cache, write-through + write-back, LRU and random replacement (see `git log`).
+- **P2 (execution) is implemented**, past the optional extensions: `execution/units/*` (alu/mul/ldst/jmp functional units with countdown latencies, N instances per class via `ExecutionConfig.units`), `execution/superscalar/tomasulo-core.ts` (RS pools, register renaming, CDB, circular ROB, speculative execution with branch predictor + prefetch buffer + squash-on-mispredict) and `execution/superscalar/scoreboard-core.ts` (CDC-6600 scoreboard, WAR/WAW stall). File names diverge from `ARCHITECTURE.md`'s proposed layout — no `reservation-station.ts`/`common-data-bus.ts`/`tomasulo.ts`; those live in `rs-pool.ts`/`tomasulo-core.ts` instead.
+  - Same divergence pattern as cache: **no `execution/index.ts` barrel** — `Simulator` picks `TomasuloCore` or `ScoreboardCore` directly based on `config.superscalar` + `config.execution.schedulingMode`. The `execution` snapshot slice is attached by the engine itself (`getExecutionSnapshot()`), not by a barrel factory.
+  - ISA extended (append-only): `DIV, AND, OR, XOR, SHL, SHR, LDI, JZ, JNZ` in `isa/opcodes.ts` / `contracts/instruction.ts`.
+  - **Not yet done:** the P2 UI panel — `app/page.tsx` still shows a `[P2] ScoreboardView — TODO` stub; no `components/execution/*` exists yet.
 
 ## Ownership & branches
 

@@ -97,18 +97,18 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 **Fișiere proprii (UI):** `components/execution/*`.
 
 ### Obligatoriu (cerut explicit de spec ca să iei punctele grupei)
-- [ ] **Set de instrucțiuni complet** — extinde tabela append-only din scaffold (NU edita rândurile existente)
-- [ ] `execution/units/functional-unit.ts` — interfața de bază (busy, latență, clasa deservită)
-- [ ] `execution/units/alu-unit.ts` — ADD/SUB
-- [ ] `execution/units/mul-unit.ts` — MUL
-- [ ] `execution/units/ldst-unit.ts` — LD/ST (folosește `MemorySystem`/dMem prin interfață — singura ta legătură cu P3)
-- [ ] `execution/units/jmp-unit.ts` — JMP
-- [ ] **Superscalaritate la nivel de unități** — engine care ține N instanțe per clasă (ex. 2 sumatoare); implementează `ExecutionEngine`
-- [ ] `execution/snapshot.ts` — `ExecutionSnapshot` (stare unități/instrucțiuni)
-- [ ] Înlocuiește mock-ul în `execution/index.ts` (barrel-ul TĂU) cu engine-ul real
-- [ ] **UI:** `ScoreboardView` / panou cu starea unităților funcționale
+- [x] **Set de instrucțiuni complet** — extinde tabela append-only din scaffold (NU edita rândurile existente) *(adăugat: DIV, AND, OR, XOR, SHL, SHR, LDI, JZ, JNZ în `isa/opcodes.ts` + `contracts/instruction.ts`)*
+- [x] `execution/units/functional-unit.ts` — interfața de bază (busy, latență, clasa deservită)
+- [x] `execution/units/alu-unit.ts` — ADD/SUB *(+ restul claselor ALU: DIV/AND/OR/XOR/SHL/SHR)*
+- [x] `execution/units/mul-unit.ts` — MUL
+- [x] `execution/units/ldst-unit.ts` — LD/ST (folosește `MemorySystem`/dMem prin interfață — singura ta legătură cu P3) *(acces multi-tact la dMem prin `ldState_`/`doLDMemory()`, scriere ST multi-tact în `doCommit()`; compatibil cu cache-ul P3)*
+- [x] `execution/units/jmp-unit.ts` — JMP
+- [x] **Superscalaritate la nivel de unități** — engine care ține N instanțe per clasă (ex. 2 sumatoare); implementează `ExecutionEngine` *(`ExecutionConfig.units` — default 2 ALU / 1 MUL / 1 LD-ST / 1 JMP)*
+- [x] `execution/snapshot.ts` — `ExecutionSnapshot` (stare unități/instrucțiuni)
+- [x] Înlocuiește mock-ul în `execution/index.ts` (barrel-ul TĂU) cu engine-ul real *(notă: la fel ca P3, nu s-a folosit barrel `execution/index.ts` — `TomasuloCore`/`ScoreboardCore` sunt instanțiate direct în `simulator.ts` după `config.superscalar` + `config.execution.schedulingMode`; felia `execution` din snapshot vine din `engine.getExecutionSnapshot()`)*
+- [ ] **UI:** `ScoreboardView` / panou cu starea unităților funcționale *(rămas TODO — `app/page.tsx` are încă stub-ul `[P2] ScoreboardView — TODO`, nu există `components/execution/*`)*
 
-**Criteriu „gata”:** un program cu 2 ALU + 1 MUL emite în paralel pe unități separate; UI arată care unitate e busy.
+**Criteriu „gata”:** un program cu 2 ALU + 1 MUL emite în paralel pe unități separate; UI arată care unitate e busy. *(motorul e gata; partea de UI nu.)*
 
 ---
 
@@ -174,6 +174,6 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 ---
 
 ## Dacă rămâne timp (extensii opționale, abia după ce merge demo-ul end-to-end)
-- **P2:** tabelă de marcaj (scoreboard), Tomasulo + stații de rezervare, common data bus, buffer de prefetch, execuție out-of-order.
+- **P2:** tabelă de marcaj (scoreboard), Tomasulo + stații de rezervare, common data bus, buffer de prefetch, execuție out-of-order. *(toate făcute: `ScoreboardCore` (CDC-6600, stall WAR/WAW) + `TomasuloCore` (RS pools în `rs-pool.ts`, renaming, CDB, ROB circular în `reorder-buffer.ts`, execuție speculativă cu branch predictor + prefetch buffer + squash-on-mispredict); rămâne doar UI-ul (`ScoreboardView`))*
 - **P3:** write-through / write-back / write-buffer; LRU (contor/stivă/matrice — unul) + LRU aproximativ. *(făcut: write-back + LRU cu contor, selectabile din UI; rămase: write-buffer, LRU aproximativ)*
 - **P4:** rafinări pe vizualizarea celor 6 cazuri.
