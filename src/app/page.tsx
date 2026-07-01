@@ -6,6 +6,7 @@ import { RegisterFileView } from '@components/pipeline/RegisterFileView'
 import { LatchView } from '@components/pipeline/LatchView'
 import { CacheView } from '@components/memory/CacheView'
 import { MemoryView } from '@components/memory/MemoryView'
+import { TlbView } from '@components/virtual-memory/TlbView'
 
 export default function SimulatorPage() {
   return (
@@ -33,9 +34,7 @@ export default function SimulatorPage() {
           </div>
           <CacheView />
           <MemoryView />
-          <div className="p-2 border-t border-zinc-800 text-zinc-700 text-[10px] font-mono italic">
-            [P4] TlbView — TODO
-          </div>
+          <TlbView />
         </div>
       </div>
     </div>

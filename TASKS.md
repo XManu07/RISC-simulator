@@ -136,12 +136,12 @@ se construiește cu FlatMemory + InOrderEngine și face `step()` fără să crap
 **Fișiere proprii (UI):** `components/virtual-memory/*`.
 
 ### Memorie virtuală (1p)
-- [ ] `virtual-memory/page-table.ts`, `virtual-memory/tlb.ts`
-- [ ] `virtual-memory/mmu.ts` — compune ierarhia de memorie (`new MMU(memorySystem, tlb)`), implementează `MemorySystem`
-- [ ] `virtual-memory/translation.ts` — **cele 6 cazuri** (TLB/cache/MP × cache/MP, vezi ARCHITECTURE.md). Nu 6 căi diferite: o singură cale + **etichetezi** în ce caz a căzut.
-- [ ] `virtual-memory/snapshot.ts` — `VmSnapshot` (inclusiv care din cele 6 cazuri s-a întâmplat)
-- [ ] Înlocuiește mock-ul în `virtual-memory/index.ts` (barrel-ul TĂU) cu `wrapWithVM` real
-- [ ] **UI:** `TlbView` + indicator al cazului curent
+- [x] `virtual-memory/page-table.ts`, `virtual-memory/tlb.ts`
+- [x] `virtual-memory/mmu.ts` — compune ierarhia de memorie (`new MMU(memorySystem, tlb)`), implementează `MemorySystem`
+- [x] `virtual-memory/translation.ts` — **cele 6 cazuri** (TLB/cache/MP × cache/MP, vezi ARCHITECTURE.md). Nu 6 căi diferite: o singură cale + **etichetezi** în ce caz a căzut.
+- [x] `virtual-memory/snapshot.ts` — `VmSnapshot` (inclusiv care din cele 6 cazuri s-a întâmplat)
+- [x] Înlocuiește mock-ul în `virtual-memory/index.ts` (barrel-ul TĂU) cu `wrapWithVM` real
+- [x] **UI:** `TlbView` + indicator al cazului curent
 
 **Criteriu „gata”:** un acces declanșează vizibil fiecare din cele 6 cazuri în funcție de starea TLB/cache (controlată din config la pornire).
 

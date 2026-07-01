@@ -12,11 +12,13 @@ import { Pipeline } from './pipeline/pipeline'
 import { TomasuloCore } from './execution/superscalar/tomasulo-core'
 import { ScoreboardCore } from './execution/superscalar/scoreboard-core'
 import { defaultExecutionConfig } from './execution/execution-config'
+import { MMU } from './virtual-memory/mmu'
 
 export class Simulator {
   private pipeline: Pipeline
   private iCache: Cache | null = null
   private dCache: Cache | null = null
+  private dMmu: MMU | null = null
   private core: TomasuloCore | null = null
   private scoreCore: ScoreboardCore | null = null
 
@@ -33,6 +35,13 @@ export class Simulator {
     } else {
       iMem = new FlatMemory(program)
       dMem = new FlatMemory()
+    }
+
+    if (config.virtualMemory) {
+      const iMmu = new MMU(iMem, config.vmConfig)
+      this.dMmu = new MMU(dMem, config.vmConfig)
+      iMem = iMmu
+      dMem = this.dMmu
     }
 
     const engine = new InOrderEngine()
@@ -56,21 +65,22 @@ export class Simulator {
   }
 
   step(): Snapshot {
+    let snap: Snapshot
     if (this.scoreCore) {
-      const snap = this.scoreCore.step()
+      snap = this.scoreCore.step()
       snap.execution = this.scoreCore.getExecutionSnapshot()
-      return snap
-    }
-    if (this.core) {
-      const snap = this.core.step()
+    } else if (this.core) {
+      snap = this.core.step()
       snap.execution = this.core.getExecutionSnapshot()
-      return snap
+    } else {
+      snap = this.pipeline.tick_()
     }
-    const snap = this.pipeline.tick_()
-    // P3 — atașează felia `memory` (starea cache-urilor) când cache-ul e activ
+    // P3 — felia `memory`, indiferent de engine
     if (this.iCache || this.dCache) {
       snap.memory = buildMemorySnapshot(this.iCache, this.dCache)
     }
+    // P4 — felia `vm`, indiferent de engine
+    if (this.dMmu) snap.vm = this.dMmu.vmSnapshot()
     return snap
   }
 
